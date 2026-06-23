@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Purple Tie — Schedule Management</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiM2ZDI4ZDkiLz48cG9seWdvbiBwb2ludHM9IjMyLDEyIDM4LDI0IDM1LDI0IDM3LDQ0IDMyLDUwIDI3LDQ0IDI5LDI0IDI2LDI0IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=="/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500&family=DM+Mono:wght@400;500&family=Lining+Nums&display=swap" rel="stylesheet"/>
 <style>
@@ -36,6 +38,17 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-he
 
 /* ── Layout ── */
 .app{display:grid;grid-template-rows:58px 1fr;min-height:100vh}
+
+/* ── Sidebar ── */
+.app-body{display:flex;min-height:calc(100vh - 58px)}
+.sidebar{width:200px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 10px;gap:6px;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto}
+.sidebar-title{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600;padding:4px 10px;margin-bottom:4px}
+.sidebar-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);border:none;background:transparent;color:var(--text);cursor:pointer;font-family:'Jost',sans-serif;font-size:15px;width:100%;text-align:left;transition:all 0.15s}
+.sidebar-btn:hover{background:var(--accent-light);color:var(--accent)}
+.sidebar-btn.active{background:var(--accent);color:#fff;font-weight:500}
+.sidebar-btn svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.main-content{flex:1;min-width:0}
 header{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
 .logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;font-weight:500;color:var(--accent);letter-spacing:-0.5px;flex-shrink:0}
 .logo span{color:var(--muted)}
@@ -87,11 +100,12 @@ main{padding:20px;max-width:100%;margin:0 auto;width:100%}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 
 /* ── Main schedule grid ── */
-.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
-.grid-wrap{overflow-x:hidden}
+.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);}
+.grid-wrap{border-radius:var(--radius-lg);}
+.grid-wrap{overflow:visible}
 table.sched{border-collapse:collapse;width:100%;table-layout:fixed;}
-table.sched thead th{background:var(--accent);color:#fff;padding:6px 4px;font-size:11px;font-weight:500;text-align:center;border-right:1px solid rgba(255,255,255,0.15);white-space:nowrap;position:sticky;top:0;z-index:10}
-table.sched thead th:first-child{text-align:left;padding-left:14px;min-width:130px;position:sticky;left:0;z-index:11;background:var(--accent2)}
+table.sched thead th{background:var(--accent);color:#fff;padding:6px 4px;font-size:11px;font-weight:500;text-align:center;border-right:1px solid rgba(255,255,255,0.15);white-space:nowrap;position:sticky;top:var(--header-h, 58px);z-index:20;box-shadow:0 2px 6px rgba(30,19,64,0.25);}
+table.sched thead th:first-child{text-align:left;padding-left:14px;min-width:130px;position:sticky;left:0;z-index:21;background:var(--accent2)}
 table.sched thead th:last-child{border-right:none}
 table.sched thead th.today-th{background:var(--accent-mid)}
 
@@ -102,13 +116,13 @@ table.sched tbody tr:hover td{background:#faf8ff}
 table.sched tbody tr:hover td.emp-td{background:var(--accent-light)}
 
 /* employee name cell */
-td.emp-td{padding:6px 8px;background:var(--surface2);position:sticky;left:0;z-index:5;border-right:1px solid var(--border2) !important;width:110px;min-width:90px;}
+td.emp-td{padding:6px 8px;background:var(--surface2);position:sticky;left:0;z-index:6;border-right:1px solid var(--border2) !important;width:110px;min-width:90px;}
 .emp-inner{display:flex;align-items:center;gap:8px}
 .emp-name-text{font-size:15px;font-weight:500;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;max-width:90px;line-height:1.3;word-break:break-word;}
-.emp-hours{font-size:10px;color:var(--muted);font-family:'Calibri','Carlito',sans-serif}
+.emp-hours{font-size:15px;color:var(--muted);font-family:'Calibri','Carlito',sans-serif}
 
 /* day cell */
-td.day-td{padding:4px;cursor:pointer;min-height:48px;height:48px;position:relative;transition:background 0.12s}
+td.day-td{padding:4px;cursor:pointer;min-height:48px;height:48px;position:relative;transition:background 0.12s;overflow:hidden;}
 td.day-td:hover{background:var(--accent-light)}
 td.day-td.today-td{background:#f5f0ff}
 td.day-td.today-td:hover{background:#ede9fe}
@@ -118,12 +132,12 @@ td.day-td.has-shift:hover{background:transparent}
 /* shift block */
 .shift-block{border-radius:8px;padding:5px 8px;height:100%;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:filter 0.12s;min-height:40px}
 .shift-block:hover{filter:brightness(0.96)}
-.shift-top{display:flex;align-items:center;justify-content:space-between;gap:4px}
-.shift-hours{font-family:'Calibri','Carlito',sans-serif;font-size:15px;font-weight:500}
+.shift-top{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.shift-hours{font-family:'Calibri','Carlito',sans-serif;font-size:20px;font-weight:500}
 .shift-del{opacity:0;font-size:16.5px;cursor:pointer;line-height:1;padding:1px;border-radius:3px}
 .shift-block:hover .shift-del{opacity:0.6}
 .shift-del:hover{opacity:1!important;background:rgba(0,0,0,0.08)}
-.shift-note{font-size:15px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.75}
+.shift-note{font-size:30px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.75}
 .empty-slot{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:48px}
 .empty-slot .plus{width:24px;height:24px;border-radius:50%;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22.5px;color:var(--muted);transition:all 0.15s}
 td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
@@ -140,8 +154,8 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
 .field select:focus,.field input:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(109,40,217,0.1)}
 .field textarea{resize:vertical;min-height:60px;line-height:1.5}
 .time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
-.del-btn{margin-right:auto}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+.del-btn{margin-right:auto;flex-shrink:0;}
 
 /* emp modal */
 .emp-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border)}
@@ -199,7 +213,8 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
 <header>
   <div class="logo">Purple <span>Tie</span></div>
   <div class="header-center">
-    <input type="text" id="sched-name" placeholder="Schedule name..." value="Week of May 26"/>
+    <span id="section-label" style="font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap;">Supervisors</span>
+    <input type="text" id="sched-name" placeholder="Schedule name..." value=""/>
     <div class="week-nav">
       <button class="btn btn-ghost" onclick="prevWeek()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <span class="week-label" id="week-label">—</span>
@@ -207,6 +222,7 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
     </div>
   </div>
   <div class="header-actions">
+
     <button class="btn" onclick="manageEmployees()">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Employees</span>
@@ -218,6 +234,14 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
     <button class="btn" onclick="doPrint()">
       <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       <span>Print</span>
+    </button>
+    <button class="btn" id="pdf-btn" onclick="doExportPDF()" style="background:#f0fdf4;border-color:#86efac;color:#166534;">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      <span id="pdf-btn-label">Export PDF</span>
+    </button>
+    <button class="btn" onclick="openDateRangeModal()" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626;" title="Day Off by date range">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Day Off Range</span>
     </button>
     <button class="btn btn-accent" onclick="saveAll()">
       <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2l11 0 5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -298,6 +322,26 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
   </div>
 </div>
 
+<div class="app-body">
+
+<!-- Section switcher floating button -->
+<div id="section-switcher" style="position:fixed;bottom:24px;left:16px;z-index:150;">
+  <button onclick="toggleSectionMenu()" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:40px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:14px;font-weight:500;box-shadow:0 4px 16px rgba(109,40,217,0.35);">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span id="switcher-label">Supervisors</span>
+    <svg id="switcher-arrow" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+  <div id="section-menu" style="display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:var(--shadow-md);overflow:hidden;min-width:160px;">
+    <button class="sidebar-btn active" id="nav-supervisors" onclick="switchSection('supervisors');toggleSectionMenu()" style="width:100%;border-radius:0;padding:11px 16px;">
+      <span>Supervisors</span>
+    </button>
+    <button class="sidebar-btn" id="nav-managers" onclick="switchSection('managers');toggleSectionMenu()" style="width:100%;border-radius:0;padding:11px 16px;">
+      <span>Managers</span>
+    </button>
+  </div>
+</div>
+
+<div class="main-content" style="width:100%;">
 <main>
 
   <div id="share-bar" class="share-bar" style="display:none">
@@ -314,9 +358,9 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
     <span style="margin-left:auto;font-size:15px;color:var(--muted)" id="last-sync"></span>
   </div>
 
-  <div class="metrics" id="metrics"></div>
+  <div class="metrics" id="metrics" style="display:none"></div>
 
-  <div class="avail-section">
+  <div class="avail-section" style="display:none">
     <div class="sec-title">
       <span>Today's availability</span>
       <span id="today-label" style="font-family:'Calibri','Carlito',sans-serif;font-size:15px;color:var(--accent)"></span>
@@ -333,7 +377,8 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
   </div>
 
 </main>
-</div>
+</div><!-- end main-content -->
+</div><!-- end app-body -->
 
 <!-- Turno modal -->
 <div class="overlay hidden" id="modal-overlay">
@@ -355,20 +400,31 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
           <button class="btn type-btn" data-type="Sick" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626;justify-content:center;font-size:13px;" onclick="selectType('Sick')">Sick</button>
           <button class="btn type-btn" data-type="Without Pay" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626;justify-content:center;font-size:13px;" onclick="selectType('Without Pay')">Without Pay</button>
           <button class="btn type-btn" data-type="Unavailable" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626;justify-content:center;font-size:13px;" onclick="selectType('Unavailable')">Unavailable</button>
+          <button class="btn type-btn" data-type="" style="background:#ede9fe;border-color:#c4b5f4;color:#6d28d9;justify-content:center;font-size:13px;grid-column:1/-1;" onclick="selectType('');fillHours(6,22);modalFullDay=true;">⬛ Full Day (6 AM – 10 PM)</button>
         </div>
       </div>
     <div class="time-row">
       <div class="field">
         <label>Start time</label>
         <div class="scroll-picker-wrap" id="start-wrap">
-          <div class="scroll-picker-display" id="start-display" onclick="togglePicker('start')">9:00 AM ▾</div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="text" id="start-input" placeholder="9:00 AM" autocomplete="off"
+              style="flex:1;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;"
+              oninput="onPickerInput('start')" onkeydown="onPickerKey(event,'start')" onfocus="buildDrum('start');document.getElementById('start-drum').classList.remove('hidden');document.getElementById('end-drum').classList.add('hidden')"/>
+            <div class="scroll-picker-display" id="start-display" onclick="togglePicker('start')" style="padding:8px 10px;white-space:nowrap;">▾</div>
+          </div>
           <div class="scroll-picker-drum hidden" id="start-drum"></div>
         </div>
       </div>
       <div class="field">
         <label>End time</label>
         <div class="scroll-picker-wrap" id="end-wrap">
-          <div class="scroll-picker-display" id="end-display" onclick="togglePicker('end')">5:00 PM ▾</div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="text" id="end-input" placeholder="5:00 PM" autocomplete="off"
+              style="flex:1;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;"
+              oninput="onPickerInput('end')" onkeydown="onPickerKey(event,'end')" onfocus="buildDrum('end');document.getElementById('end-drum').classList.remove('hidden');document.getElementById('start-drum').classList.add('hidden')"/>
+            <div class="scroll-picker-display" id="end-display" onclick="togglePicker('end')" style="padding:8px 10px;white-space:nowrap;">▾</div>
+          </div>
           <div class="scroll-picker-drum hidden" id="end-drum"></div>
         </div>
       </div>
@@ -389,6 +445,11 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
       <label>Note</label>
       <textarea id="m-note" placeholder="Ej: e.g. client meeting, covering for John, training..."></textarea>
     </div>
+    <!-- Move to week -->
+    <div id="move-week-section" style="display:none;margin-bottom:4px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px;font-weight:500;">Mover a otra semana</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="move-week-btns"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm del-btn" id="del-btn" onclick="deleteCurrentShift()" style="display:none">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Eliminar
@@ -406,8 +467,12 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
   <div class="modal" style="width:min(520px,92vw)">
     <h3>Manage employees</h3>
     <div id="emp-list" style="margin-bottom:14px;max-height:360px;overflow-y:auto"></div>
-    <div style="display:flex;gap:8px">
-      <input type="text" id="new-emp" placeholder="Employee name" style="flex:1;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:18px;outline:none"/>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input type="text" id="new-emp" placeholder="Employee name" style="flex:1;min-width:140px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:18px;outline:none"/>
+      <select id="new-emp-cat" style="padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;">
+        <option value="floor">🏢 Floor</option>
+        <option value="kitchen">🍳 Kitchen</option>
+      </select>
       <button class="btn btn-accent btn-sm" onclick="addEmployee()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar
       </button>
@@ -420,13 +485,84 @@ td.day-td:hover .empty-slot .plus{border-color:var(--accent);color:var(--accent)
   </div>
 </div>
 
+<!-- Date Range Day Off Modal -->
+<div class="overlay hidden" id="daterange-overlay">
+  <div class="modal" style="width:min(360px,92vw)">
+    <h3>&#128197; Day Off &mdash; Date Range</h3>
+    <div class="field">
+      <label>Employee</label>
+      <select id="dr-emp"></select>
+    </div>
+    <div class="field">
+      <label>Type</label>
+      <select id="dr-type">
+        <option value="Day Off">Day Off</option>
+        <option value="Sick">Sick</option>
+        <option value="Without Pay">Without Pay</option>
+        <option value="Unavailable">Unavailable</option>
+      </select>
+    </div>
+    <div class="time-row">
+      <div class="field">
+        <label>From</label>
+        <input type="date" id="dr-from" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;"/>
+      </div>
+      <div class="field">
+        <label>To</label>
+        <input type="date" id="dr-to" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Note (optional)</label>
+      <textarea id="dr-note" placeholder="e.g. vacation, medical leave..." style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;resize:vertical;min-height:52px;"></textarea>
+    </div>
+    <div id="dr-preview" style="font-size:14px;color:var(--muted);margin-bottom:8px;min-height:18px;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeDateRangeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmDateRange()">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Apply
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="notify" id="notify"><div class="ndot"></div><span id="notify-text"></span></div>
 
 <script>
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+// Migrate employees: if stored as plain strings, convert to objects
+function migrateEmployees(arr){
+  return (arr||[]).map(e => typeof e === 'string' ? {name:e, cat:'floor'} : e);
+}
+// Migrate old numeric week offsets to YYYY-MM-DD keys
+function migrateWeekKeys(shifts){
+  if(!shifts || !shifts.length) return shifts;
+  const now = new Date();
+  const todayMon = new Date(now);
+  todayMon.setDate(now.getDate() - ((now.getDay()+6)%7));
+  todayMon.setHours(0,0,0,0);
+  return shifts.map(s => {
+    if(typeof s.week === 'number'){
+      const mon = new Date(todayMon);
+      mon.setDate(todayMon.getDate() + s.week * 7);
+      const key = mon.getFullYear() + '-' +
+        String(mon.getMonth()+1).padStart(2,'0') + '-' +
+        String(mon.getDate()).padStart(2,'0');
+      return {...s, week: key};
+    }
+    return s;
+  });
+}
+function empName(e){ return typeof e === 'string' ? e : e.name; }
+function empCat(e){ return (typeof e === 'string' ? 'floor' : e.cat) || 'floor'; }
+
 const START_H = 0, END_H = 30;
 const HOURS_LIST = [];
-for (let h = START_H; h <= END_H; h++) { HOURS_LIST.push(h); if(h < END_H) HOURS_LIST.push(h + 0.5); }
+for (let h = START_H; h <= END_H; h++) {
+  HOURS_LIST.push(h);
+  if(h < END_H){ HOURS_LIST.push(h+0.25); HOURS_LIST.push(h+0.5); HOURS_LIST.push(h+0.75); }
+}
 
 // Purple-toned palette per employee (20 colors)
 const EMP_PALETTES = [
@@ -456,14 +592,24 @@ function fmtH(h) {
   const next = h >= 24 ? ' +1' : '';
   const hh = h >= 24 ? h - 24 : h;
   const wholeH = Math.floor(hh);
-  const mins = (hh % 1 === 0.5) ? '30' : '00';
-  if(wholeH === 0 && mins === '00') return '12:00 AM' + next;
-  if(wholeH === 0 && mins === '30') return '12:30 AM' + next;
-  if(wholeH === 12 && mins === '00') return '12:00 PM' + next;
-  if(wholeH === 12 && mins === '30') return '12:30 PM' + next;
+  const frac = Math.round((hh % 1) * 60);
+  const mins = frac === 0 ? '00' : frac < 10 ? '0'+frac : ''+frac;
+  if(wholeH === 0 && frac === 0) return '12:00 AM' + next;
+  if(wholeH === 0) return `12:${mins} AM${next}`;
+  if(wholeH === 12 && frac === 0) return '12:00 PM' + next;
+  if(wholeH === 12) return `12:${mins} PM${next}`;
   const s = wholeH < 12 ? 'AM' : 'PM';
   const d = wholeH > 12 ? wholeH - 12 : wholeH;
   return `${d}:${mins} ${s}${next}`;
+}
+function fmtHShort(h) {
+  // Short format: 9a, 12p, 1:30p — for grid cells
+  const hh = h >= 24 ? h - 24 : h;
+  const wholeH = Math.floor(hh);
+  const mins = (hh % 1 === 0.5) ? ':30' : '';
+  const s = wholeH < 12 ? 'a' : 'p';
+  const d = wholeH === 0 ? 12 : wholeH > 12 ? wholeH - 12 : wholeH;
+  return `${d}${mins}${s}`;
 }
 function todayIdx() { return (new Date().getDay() + 6) % 7; }
 function getWeekDates(off) {
@@ -473,28 +619,107 @@ function getWeekDates(off) {
   return Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
 }
 function fmtDate(d) { return d.toLocaleDateString('en',{day:'numeric',month:'short'}); }
+// Returns a stable YYYY-MM-DD key for the Monday of the given week offset
+function getWeekKey(off) {
+  const dates = getWeekDates(off);
+  const mon = dates[0];
+  return mon.getFullYear() + '-' +
+    String(mon.getMonth()+1).padStart(2,'0') + '-' +
+    String(mon.getDate()).padStart(2,'0');
+}
 function initials(n) { return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
 
-const LOCAL_KEY = 'purpletie_schedule';
-const SYNC_KEY = 'purpletie_jsonbin_id';
-const JSONBIN_API = 'https://api.jsonbin.io/v3/b';
-const JSONBIN_MASTER_KEY = '$2a$10$/9Me3OWYsNZa0XbWKU3Hg.1m6ZplMMNg06134to5OWVF7QDTyQJGq';
+// Firebase config
+const FIREBASE_DB = 'https://purple-tie-fdb7d-default-rtdb.firebaseio.com';
+
+// Two separate sections: supervisors and managers
+const SECTIONS = {
+  supervisors: { localKey:'purpletie_schedule', syncKey:'purpletie_jsonbin_id', label:'Supervisors', icon:'' },
+  managers:    { localKey:'purpletie_managers_schedule', syncKey:'purpletie_managers_jsonbin_id', label:'Managers', icon:'' }
+};
+let currentSection = 'supervisors';
+
+function getLocalKey(){ return SECTIONS[currentSection].localKey; }
+function getSyncKey(){ return SECTIONS[currentSection].syncKey; }
+
 function loadLocalData(){
   try {
-    const saved = localStorage.getItem(LOCAL_KEY);
-    if(saved) return JSON.parse(saved);
+    const saved = localStorage.getItem(getLocalKey());
+    if(saved){
+      const d = JSON.parse(saved);
+      d.employees = migrateEmployees(d.employees);
+      d.shifts = migrateWeekKeys(d.shifts || []);
+      return d;
+    }
   } catch(e){}
   return null;
 }
-let data = loadLocalData() || {
-  name:'Week of May 26',
-  employees:['Ana Lopez','Carlos Ruiz','Maria Torres'],
-  shifts:[]
-};
+function getAutoWeekName(){
+  const now = new Date();
+  return now.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+}
+function defaultData(section){
+  if(section==='managers') return { name:getAutoWeekName(), employees:[{name:'Manager 1',cat:'floor'},{name:'Manager 2',cat:'floor'}], shifts:[] };
+  return { name:getAutoWeekName(), employees:[{name:'Ana Lopez',cat:'floor'},{name:'Carlos Ruiz',cat:'floor'},{name:'Maria Torres',cat:'kitchen'}], shifts:[] };
+}
+let data = loadLocalData() || defaultData(currentSection);
 let shareKey=null, pollTimer=null, weekOffset=0, editingIdx=null;
 
+function toggleSectionMenu(){
+  const menu = document.getElementById('section-menu');
+  const arrow = document.getElementById('switcher-arrow');
+  const open = menu.style.display === 'none';
+  menu.style.display = open ? 'block' : 'none';
+  arrow.style.transform = open ? 'rotate(180deg)' : '';
+}
+// close menu when clicking outside
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#section-switcher')){
+    document.getElementById('section-menu').style.display='none';
+    document.getElementById('switcher-arrow').style.transform='';
+  }
+});
+
+function switchSection(section){
+  if(section === currentSection) return;
+  // Save current section data first
+  localStorage.setItem(getLocalKey(), JSON.stringify(data));
+  // Switch
+  currentSection = section;
+  weekOffset = 0;
+  // Update sidebar buttons
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + section).classList.add('active');
+  // Update header section label
+  const secInfo = SECTIONS[section];
+  document.getElementById('section-label').textContent = secInfo.label;
+  document.getElementById('switcher-label').textContent = secInfo.label;
+  // Load data for new section
+  data = loadLocalData() || defaultData(section);
+  data.employees = migrateEmployees(data.employees);
+  // Update URL with correct sync ID for this section
+  const newSyncId = localStorage.getItem(getSyncKey());
+  if(newSyncId && window.history.replaceState){
+    const url = new URL(window.location.href);
+    url.searchParams.set('sync', newSyncId);
+    url.searchParams.set('section', section);
+    window.history.replaceState({}, '', url.toString());
+  } else if(window.history.replaceState){
+    const url = new URL(window.location.href);
+    url.searchParams.set('section', section);
+    url.searchParams.delete('sync');
+    window.history.replaceState({}, '', url.toString());
+  }
+  // Stop polling and restart if needed
+  stopRealtime();
+  if(newSyncId){ doRefresh().then(()=>startRealtime()); }
+  renderAll();
+  if(typeof updateHeaderHeight==='function') setTimeout(updateHeaderHeight, 50);
+  showNotify('Switched to ' + secInfo.label + ' schedule');
+}
+
 function palette(emp) {
-  const i = data.employees.indexOf(emp);
+  const i = data.employees.findIndex(e=>empName(e)===emp);
   return EMP_PALETTES[(i>=0?i:0) % EMP_PALETTES.length];
 }
 function setStatus(msg,ok=true) {
@@ -508,21 +733,33 @@ function showNotify(msg) {
   setTimeout(()=>el.classList.remove('show'),4000);
 }
 
+const OT_LIMIT = 40;
+function getEmpHours(emp){ const wk=getWeekKey(weekOffset); return data.shifts.filter(s=>s.emp===emp&&s.week===wk).reduce((a,s)=>a+(s.dayOff?0:s.endH-s.startH),0); }
 function renderMetrics() {
   const ti=todayIdx();
   let working=0, total=0;
-  const ws=data.shifts.filter(s=>s.week===weekOffset);
+  const ws=data.shifts.filter(s=>s.week===getWeekKey(weekOffset));
   ws.forEach(s=>{total++;if(s.day===ti)working++;});
   const maxSlots=data.employees.length*7;
   const pct=maxSlots>0?Math.round(total/maxSlots*100):0;
   let totalHrs=0;
-  ws.forEach(s=>totalHrs+=(s.endH-s.startH));
+  ws.forEach(s=>totalHrs+=(s.dayOff?0:s.endH-s.startH));
+  // Overtime calculation
+  let totalOT=0;
+  let otEmps=[];
+  data.employees.forEach(empObj=>{const emp=empName(empObj);
+    const hrs=getEmpHours(emp);
+    if(hrs>OT_LIMIT){ totalOT+=(hrs-OT_LIMIT); otEmps.push(emp.split(' ')[0]+': +'+(hrs-OT_LIMIT)+'h'); }
+  });
+  const otColor = totalOT>0 ? '#dc2626' : 'var(--accent)';
+  const otLabel = totalOT>0 ? `<span title="${otEmps.join(', ')}" style="cursor:help">${totalOT}h ⚠</span>` : '0h';
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="metric-label">On shift today</div><div class="metric-val">${working}</div></div>
-    <div class="metric"><div class="metric-label">Empleados</div><div class="metric-val">${data.employees.length}</div></div>
+    <div class="metric"><div class="metric-label">Employees</div><div class="metric-val">${data.employees.length}</div></div>
     <div class="metric"><div class="metric-label">Weekly shifts</div><div class="metric-val">${total}</div></div>
     <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val">${totalHrs}</div></div>
     <div class="metric"><div class="metric-label">Coverage</div><div class="metric-val">${pct}%</div></div>
+    <div class="metric"><div class="metric-label" style="color:${otColor};font-weight:600">Overtime</div><div class="metric-val" style="color:${otColor}">${otLabel}</div></div>
   `;
 }
 
@@ -533,9 +770,10 @@ function renderAvail() {
   const el=document.getElementById('avail-chips');
   el.innerHTML='';
   if(!data.employees.length){el.innerHTML='<span style="font-size:16.5px;color:var(--muted)">No employees yet.</span>';return;}
-  data.employees.forEach((emp,i)=>{
+  data.employees.forEach((empObj,i)=>{
+    const emp=empName(empObj);
     const pal=EMP_PALETTES[i%EMP_PALETTES.length];
-    const dayShifts=data.shifts.filter(s=>s.emp===emp&&s.day===ti&&s.week===weekOffset&&!s.dayOff).sort((a,b)=>a.startH-b.startH);
+    const dayShifts=data.shifts.filter(s=>s.emp===emp&&s.day===ti&&s.week===getWeekKey(weekOffset)&&!s.dayOff).sort((a,b)=>a.startH-b.startH);
     const on=dayShifts.length>0;
     const shiftLabel=on?dayShifts.map(s=>fmtH(s.startH)+'–'+fmtH(s.endH)).join(', '):'No shift';
     const chip=document.createElement('div');
@@ -551,7 +789,8 @@ function renderAvail() {
 function renderLegend() {
   const el=document.getElementById('legend');
   el.innerHTML='';
-  data.employees.forEach((emp,i)=>{
+  data.employees.forEach((empObj,i)=>{
+    const emp=empName(empObj);
     const pal=EMP_PALETTES[i%EMP_PALETTES.length];
     const d=document.createElement('div');
     d.className='leg-item';
@@ -597,7 +836,12 @@ function renderGrid() {
     return;
   }
 
-  data.employees.forEach((emp,ei)=>{
+  // Group employees by category with a divider row between groups
+  const floorEmps = data.employees.map((e,i)=>({e,i})).filter(({e})=>empCat(e)==='floor');
+  const kitchenEmps = data.employees.map((e,i)=>({e,i})).filter(({e})=>empCat(e)==='kitchen');
+
+  function renderEmpRow(empObj, ei){
+    const emp = empName(empObj);
     const pal=EMP_PALETTES[ei%EMP_PALETTES.length];
     const tr=tbody.insertRow();
 
@@ -605,11 +849,14 @@ function renderGrid() {
     const td0=tr.insertCell();
     td0.className='emp-td';
     // total hours this week
-    const hrs=data.shifts.filter(s=>s.emp===emp&&s.week===weekOffset).reduce((a,s)=>a+(s.dayOff?0:s.endH-s.startH),0);
+    const hrs=getEmpHours(emp);
+    const ot=hrs-OT_LIMIT;
+    const otBadge=ot>0?`<div style="color:#dc2626;font-size:9px;font-weight:700;background:#fee2e2;padding:1px 4px;border-radius:4px;margin-top:2px;white-space:nowrap;display:inline-block;">+${ot}h OT</div>`:'';
+    const hrsColor=ot>0?'#dc2626':'var(--muted)';
     td0.innerHTML=`<div class="emp-inner">
       <div class="avatar" style="width:32px;height:32px;font-size:15.8px;background:${pal.bg};color:${pal.text};border:1.5px solid ${pal.border}">${initials(emp)}</div>
-      <div><div class="emp-name-text" title="${emp}">${emp}</div>
-      <div class="emp-hours">${hrs}h/week</div></div>
+      <div style="min-width:0;overflow:hidden"><div class="emp-name-text" title="${emp}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emp}</div>
+      <div class="emp-hours" style="color:${hrsColor};white-space:nowrap;">${hrs}h</div>${otBadge}</div>
     </div>`;
 
     // day cells — AM / PM split
@@ -618,69 +865,198 @@ function renderGrid() {
       td.className='day-td'+(di===ti&&weekOffset===0?' today-td':'');
       td.style.cssText='padding:0;vertical-align:top;height:auto;min-height:56px;cursor:default;';
 
-      // Normal AM | PM split
+      // Check if this day has a full-day (range) day off
+      const SPECIAL_TYPES=['Day Off','Sick','Without Pay','Unavailable'];
+      const rangeDayOff = data.shifts.find(s=>
+        s.emp===emp && s.day===di && s.week===getWeekKey(weekOffset) &&
+        s.dayOff && s.startH===0 && s.endH===24
+      );
+
+      if(rangeDayOff){
+        // Render as a solid full-height bar
+        const idx = data.shifts.indexOf(rangeDayOff);
+        const typeColors = {
+          'Day Off':      {bg:'#fee2e2', border:'#fca5a5', text:'#dc2626'},
+          'Sick':         {bg:'#fee2e2', border:'#fca5a5', text:'#dc2626'},
+          'Without Pay':  {bg:'#fef3c7', border:'#fcd34d', text:'#92400e'},
+          'Unavailable':  {bg:'#f3f4f6', border:'#d1d5db', text:'#374151'},
+        };
+        const tc = typeColors[rangeDayOff.shiftType] || typeColors['Day Off'];
+        const label = rangeDayOff.shiftType || 'Day Off';
+        const noteHtml = rangeDayOff.note && rangeDayOff.note !== label
+          ? `<div style="font-size:9px;opacity:0.75;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${rangeDayOff.note}</div>`
+          : '';
+        const bar = document.createElement('div');
+        bar.style.cssText=`background:${tc.bg};border-left:3px solid ${tc.border};color:${tc.text};height:100%;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;cursor:pointer;`;
+        bar.innerHTML=`<div style="font-size:10px;font-weight:700;text-align:center;letter-spacing:0.04em;">${label}</div>${noteHtml}<span style="opacity:0.5;font-size:14px;margin-top:4px;cursor:pointer;" onclick="removeShift(event,${idx})">✕</span>`;
+        bar.addEventListener('click', e=>{ if(!e.target.closest('[onclick]')) openModal(di, emp, idx); });
+        td.appendChild(bar);
+      } else {
+      // Normal AM | PM split or Full cell depending on gridMode
       {
         const wrapper=document.createElement('div');
-        wrapper.style.cssText='display:grid;grid-template-columns:1fr 1fr;height:100%;min-height:70px;';
 
-        ['AM','PM'].forEach(period=>{
-          const isAM = period==='AM';
-          const half=document.createElement('div');
-          half.style.cssText=`display:flex;flex-direction:column;gap:2px;padding:3px;border-right:${isAM?'1px dashed var(--border)':'none'};min-height:70px;`;
-
-          const label=document.createElement('div');
-          label.textContent=period;
-          label.style.cssText='font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--muted);text-align:center;margin-bottom:1px;opacity:0.7;';
-          half.appendChild(label);
-
-          const SPECIAL_TYPES=['Day Off','Sick','Without Pay','Unavailable'];
-          const periodShifts=data.shifts
+        if(gridMode === 'full'){
+          // Full cell — all shifts stacked, no AM/PM split
+          wrapper.style.cssText='display:flex;flex-direction:column;gap:2px;padding:3px;height:100%;min-height:70px;';
+          const allShifts=data.shifts
             .map((s,idx)=>({s,idx}))
-            .filter(({s})=>{
-              if(s.emp!==emp||s.day!==di||s.week!==weekOffset) return false;
-              return isAM ? s.startH < 12 : s.startH >= 12;
-            })
+            .filter(({s})=>s.emp===emp&&s.day===di&&s.week===getWeekKey(weekOffset))
             .sort((a,b)=>a.s.startH-b.s.startH);
 
-          periodShifts.forEach(({s,idx})=>{
+          allShifts.forEach(({s,idx})=>{
             const block=document.createElement('div');
             block.className='shift-block';
-            const isSpecialShift = SPECIAL_TYPES.includes(s.shiftType||s.note);
-            const cellBg = isSpecialShift ? '#fee2e2' : (s.shiftColor || '#ffffff');
-            const cellBorder = isSpecialShift ? '#fca5a5' : (s.shiftColor ? s.shiftColor : pal.border);
-            const cellColor = isSpecialShift ? '#dc2626' : pal.text;
+            const isSpecialShift=SPECIAL_TYPES.includes(s.shiftType||s.note);
+            const cellBg=isSpecialShift?'#fee2e2':(s.shiftColor||'#ffffff');
+            const cellBorder=isSpecialShift?'#fca5a5':(s.shiftColor?s.shiftColor:pal.border);
+            const cellColor=isSpecialShift?'#dc2626':pal.text;
             block.style.cssText=`background:${cellBg};color:${cellColor};border:1px solid ${cellBorder};min-height:32px;`;
             block.innerHTML=`<div class="shift-top">
-                <span class="shift-hours" style="font-size:15px;">${fmtH(s.startH)}–${fmtH(s.endH)}</span>
+                <span class="shift-hours" style="font-size:20px;line-height:1.2;word-break:break-word;white-space:normal;">${fmtH(s.startH)}–<br>${fmtH(s.endH)}</span>
                 <span class="shift-del" onclick="removeShift(event,${idx})">✕</span>
               </div>
-              ${isSpecialShift?`<div class="shift-note" style="font-size:9px;font-weight:600;" title="${s.note}">${s.note}</div>`:s.note?`<div class="shift-note" style="font-size:9px;" title="${s.note}">${s.note}</div>`:''}`;
-            block.addEventListener('click', ()=>openModal(di, emp, idx));
-            half.appendChild(block);
+              ${isSpecialShift?`<div class="shift-note" style="font-size:18px;font-weight:600;" title="${s.note}">${s.note}</div>`:s.note?`<div class="shift-note" style="font-size:18px;" title="${s.note}">${s.note}</div>`:''}`;
+            block.addEventListener('click',()=>openModal(di,emp,idx));
+            wrapper.appendChild(block);
           });
 
-          // only show + if this half has no shift yet
-          if(periodShifts.length === 0){
+          if(allShifts.length===0){
             const addBtn=document.createElement('div');
-            addBtn.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;padding:2px 0;flex:1;';
+            addBtn.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;flex:1;';
             addBtn.innerHTML='<div class="plus" style="width:16px;height:16px;font-size:14px;border-radius:50%;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);">+</div>';
-            addBtn.addEventListener('click', ()=>openModal(di, emp, null, isAM?9:13));
-            half.appendChild(addBtn);
+            addBtn.addEventListener('click',()=>openModal(di,emp,null,9));
+            wrapper.appendChild(addBtn);
           }
 
-          wrapper.appendChild(half);
-        });
+        } else {
+          // AM | PM split — but if a shift spans both, render as full-width block
+          wrapper.style.cssText='display:grid;grid-template-columns:1fr 1fr;height:100%;min-height:70px;';
+
+          // Check if there's a shift that spans both AM and PM
+          const fullDayShifts = data.shifts
+            .map((s,idx)=>({s,idx}))
+            .filter(({s})=>s.emp===emp&&s.day===di&&s.week===getWeekKey(weekOffset)&&s.fullDay===true)
+            .sort((a,b)=>a.s.startH-b.s.startH);
+
+          if(fullDayShifts.length > 0){
+            // Render as a single full-width block over both columns
+            wrapper.style.cssText='display:flex;flex-direction:column;gap:2px;padding:3px;height:100%;min-height:70px;';
+            // Render full day shifts first
+            fullDayShifts.forEach(({s,idx})=>{
+              const block=document.createElement('div');
+              block.className='shift-block';
+              const isSpecialShift=SPECIAL_TYPES.includes(s.shiftType||s.note);
+              const cellBg=isSpecialShift?'#fee2e2':(s.shiftColor||'#ffffff');
+              const cellBorder=isSpecialShift?'#fca5a5':(s.shiftColor?s.shiftColor:pal.border);
+              const cellColor=isSpecialShift?'#dc2626':pal.text;
+              block.style.cssText=`background:${cellBg};color:${cellColor};border:1px solid ${cellBorder};min-height:32px;flex:1;`;
+              block.innerHTML=`<div class="shift-top">
+                  <span class="shift-hours" style="font-size:20px;line-height:1.2;word-break:break-word;white-space:normal;">${fmtH(s.startH)}–<br>${fmtH(s.endH)}</span>
+                  <span class="shift-del" onclick="removeShift(event,${idx})">✕</span>
+                </div>
+                ${isSpecialShift?`<div class="shift-note" style="font-size:18px;font-weight:600;" title="${s.note}">${s.note}</div>`:s.note?`<div class="shift-note" style="font-size:18px;" title="${s.note}">${s.note}</div>`:''}`;
+              block.addEventListener('click',()=>openModal(di,emp,idx));
+              wrapper.appendChild(block);
+            });
+            // Also render any other (non-fullDay) shifts in the same cell — none expected since confirmShift clears them
+
+          } else {
+          ['AM','PM'].forEach(period=>{
+            const isAM = period==='AM';
+            const half=document.createElement('div');
+            half.style.cssText=`display:flex;flex-direction:column;gap:2px;padding:3px;border-right:${isAM?'1px dashed var(--border)':'none'};min-height:70px;`;
+
+            const label=document.createElement('div');
+            label.textContent=period;
+            label.style.cssText='font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--muted);text-align:center;margin-bottom:1px;opacity:0.7;';
+            half.appendChild(label);
+
+            const periodShifts=data.shifts
+              .map((s,idx)=>({s,idx}))
+              .filter(({s})=>{
+                if(s.emp!==emp||s.day!==di||s.week!==getWeekKey(weekOffset)) return false;
+                return isAM ? s.startH < 12 : s.startH >= 12;
+              })
+              .sort((a,b)=>a.s.startH-b.s.startH);
+
+            periodShifts.forEach(({s,idx})=>{
+              const block=document.createElement('div');
+              block.className='shift-block';
+              const isSpecialShift=SPECIAL_TYPES.includes(s.shiftType||s.note);
+              const cellBg=isSpecialShift?'#fee2e2':(s.shiftColor||'#ffffff');
+              const cellBorder=isSpecialShift?'#fca5a5':(s.shiftColor?s.shiftColor:pal.border);
+              const cellColor=isSpecialShift?'#dc2626':pal.text;
+              block.style.cssText=`background:${cellBg};color:${cellColor};border:1px solid ${cellBorder};min-height:32px;`;
+              block.innerHTML=`<div class="shift-top">
+                  <span class="shift-hours" style="font-size:20px;line-height:1.2;word-break:break-word;white-space:normal;">${fmtH(s.startH)}–<br>${fmtH(s.endH)}</span>
+                  <span class="shift-del" onclick="removeShift(event,${idx})">✕</span>
+                </div>
+                ${isSpecialShift?`<div class="shift-note" style="font-size:18px;font-weight:600;" title="${s.note}">${s.note}</div>`:s.note?`<div class="shift-note" style="font-size:18px;" title="${s.note}">${s.note}</div>`:''}`;
+              block.addEventListener('click',()=>openModal(di,emp,idx));
+              half.appendChild(block);
+            });
+
+            if(periodShifts.length===0){
+              const addBtn=document.createElement('div');
+              addBtn.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;padding:2px 0;flex:1;';
+              addBtn.innerHTML='<div class="plus" style="width:16px;height:16px;font-size:14px;border-radius:50%;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);">+</div>';
+              addBtn.addEventListener('click',()=>openModal(di,emp,null,isAM?9:13));
+              half.appendChild(addBtn);
+            }
+
+            wrapper.appendChild(half);
+          });
+          } // end else (no full-day shift)
+        }
 
         td.appendChild(wrapper);
       }
+      } // end else normal
     });
-  });
+  } // end renderEmpRow
+
+  // Render floor supervisors
+  floorEmps.forEach(({e,i}) => renderEmpRow(e, i));
+
+  // Divider row between categories (only if both groups have employees)
+  if(floorEmps.length > 0 && kitchenEmps.length > 0){
+    const divTr = tbody.insertRow();
+    divTr.style.cssText = 'pointer-events:none;';
+    const divTd = divTr.insertCell();
+    divTd.colSpan = 8;
+    divTd.style.cssText = 'padding:0;border:none;';
+    divTd.innerHTML = `<div style="border-top:3px solid var(--accent);margin:0;"></div>`;
+  }
+
+  // Render kitchen supervisors
+  kitchenEmps.forEach(({e,i}) => renderEmpRow(e, i));
+}
+
+async function pushToCloud(){
+  autoSave();
+  if(cloudSaveTimer) clearTimeout(cloudSaveTimer);
+  // pause polling so it doesn't overwrite our change
+  stopRealtime();
+  const binId=localStorage.getItem(getSyncKey());
+  if(!binId){ startRealtime(); return; }
+  try{
+    await fetch(`${FIREBASE_DB}/schedules/${binId}.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
+    setStatus('Saved ✓');
+    document.getElementById('last-sync').textContent='Saved: '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){ setStatus('Saved locally only',false); }
+  // resume polling after 3s
+  setTimeout(()=>startRealtime(), 3000);
 }
 
 function autoSave(){
   try{
     data.name=document.getElementById('sched-name').value||data.name;
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+    localStorage.setItem(getLocalKey(), JSON.stringify(data));
   }catch(e){}
 }
 let cloudSaveTimer=null;
@@ -689,12 +1065,12 @@ function cloudSave(){
   // debounce — wait 1.5s after last change before pushing to cloud
   if(cloudSaveTimer) clearTimeout(cloudSaveTimer);
   cloudSaveTimer = setTimeout(async()=>{
-    const binId=localStorage.getItem(SYNC_KEY);
+    const binId=localStorage.getItem(getSyncKey());
     if(!binId) return; // no cloud configured yet
     try{
-      await fetch(`${JSONBIN_API}/${binId}`,{
+      await fetch(`${FIREBASE_DB}/schedules/${binId}.json`,{
         method:'PUT',
-        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_MASTER_KEY},
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
       });
       setStatus('Auto-saved ✓');
@@ -702,8 +1078,31 @@ function cloudSave(){
     }catch(e){ /* silent fail, local copy is safe */ }
   }, 1500);
 }
+let gridMode = 'ampm'; // 'ampm' | 'full'
+function toggleGridMode(){
+  gridMode = gridMode === 'ampm' ? 'full' : 'ampm';
+  const btn = document.getElementById('grid-mode-btn');
+  const label = document.getElementById('grid-mode-label');
+  const icon = document.getElementById('grid-mode-icon');
+  if(gridMode === 'full'){
+    label.textContent = 'AM/PM';
+    icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/>';
+    btn.style.background = 'var(--accent-light)';
+    btn.style.borderColor = 'var(--accent-mid)';
+    btn.style.color = 'var(--accent)';
+  } else {
+    label.textContent = 'Full Cell';
+    icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/>';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+  renderGrid();
+}
+
 function renderAll() {
-  data.name=document.getElementById('sched-name').value||data.name;
+  data.name = getAutoWeekName();
+  document.getElementById('sched-name').value = data.name;
   renderMetrics();
   renderAvail();
   renderLegend();
@@ -724,27 +1123,59 @@ function fillHours(startVal, endVal) {
 }
 
 function updateDisplay(which) {
-  document.getElementById(which+'-display').textContent = fmtH(pickerVals[which]) + ' ▾';
+  document.getElementById(which+'-input').value = fmtH(pickerVals[which]);
 }
 
 function buildDrum(which) {
   const drum = document.getElementById(which+'-drum');
   const list = document.createElement('div');
   list.className = 'drum-list';
+  const inputVal = document.getElementById(which+'-input').value.trim().toLowerCase();
   HOURS_LIST.forEach(h => {
+    const label = fmtH(h);
+    if(inputVal && !label.toLowerCase().startsWith(inputVal) && !label.toLowerCase().includes(inputVal)) return;
     const item = document.createElement('div');
     item.className = 'drum-item' + (h === pickerVals[which] ? ' selected' : '');
-    item.textContent = fmtH(h);
-    item.addEventListener('click', () => selectHour(which, h));
+    item.textContent = label;
+    item.addEventListener('mousedown', e=>{ e.preventDefault(); selectHour(which, h); });
     list.appendChild(item);
   });
   drum.innerHTML = '';
   drum.appendChild(list);
-  // scroll to selected after render
   setTimeout(() => {
     const sel = list.querySelector('.selected');
     if(sel) sel.scrollIntoView({block:'center', behavior:'instant'});
   }, 30);
+}
+
+function onPickerInput(which) {
+  buildDrum(which);
+  document.getElementById(which+'-drum').classList.remove('hidden');
+}
+
+function onPickerKey(e, which) {
+  if(e.key === 'Enter' || e.key === 'Tab') {
+    // try to parse typed time
+    const parsed = parseTypedTime(document.getElementById(which+'-input').value);
+    if(parsed !== null){ pickerVals[which] = parsed; updateDisplay(which); }
+    document.getElementById(which+'-drum').classList.add('hidden');
+  }
+  if(e.key === 'Escape') document.getElementById(which+'-drum').classList.add('hidden');
+}
+
+function parseTypedTime(str) {
+  str = str.trim().toLowerCase().replace(/\s+/g,' ');
+  // formats: "9", "9:30", "9:15 am", "930", "21:00"
+  const m = str.match(/^(\d{1,2})(?::?(\d{2}))?\s*(am|pm)?$/);
+  if(!m) return null;
+  let h = parseInt(m[1]);
+  const mins = m[2] ? parseInt(m[2]) : 0;
+  const ampm = m[3];
+  if(ampm === 'pm' && h < 12) h += 12;
+  if(ampm === 'am' && h === 12) h = 0;
+  if(h < 0 || h > 30) return null;
+  if(![0,15,30,45].includes(mins)) return null;
+  return h + mins/60;
 }
 
 function togglePicker(which) {
@@ -754,6 +1185,7 @@ function togglePicker(which) {
   if(drum.classList.contains('hidden')) {
     buildDrum(which);
     drum.classList.remove('hidden');
+    document.getElementById(which+'-input').focus();
   } else {
     drum.classList.add('hidden');
   }
@@ -763,25 +1195,36 @@ function selectHour(which, h) {
   pickerVals[which] = h;
   updateDisplay(which);
   document.getElementById(which+'-drum').classList.add('hidden');
-  buildDrum(which);
 }
 
 function parseHourInput(which) {
+  // first try to parse whatever is typed
+  const parsed = parseTypedTime(document.getElementById(which+'-input').value);
+  if(parsed !== null) { pickerVals[which] = parsed; }
   return pickerVals[which];
 }
 
 document.addEventListener('click', e => {
-  if(!e.target.closest('.scroll-picker-wrap'))
-    document.querySelectorAll('.scroll-picker-drum').forEach(d=>d.classList.add('hidden'));
+  if(!e.target.closest('.scroll-picker-wrap')) {
+    ['start','end'].forEach(which => {
+      document.getElementById(which+'-drum').classList.add('hidden');
+      // parse whatever was typed
+      const parsed = parseTypedTime(document.getElementById(which+'-input').value);
+      if(parsed !== null){ pickerVals[which] = parsed; updateDisplay(which); }
+    });
+  }
 });
 
 function openModal(dayIdx, emp, shIdx, defaultStart) {
+  stopRealtime();
   editingIdx=shIdx;
+  modalFullDay = false;
   const sh=shIdx!==null?data.shifts[shIdx]:null;
+  if(sh && sh.fullDay) modalFullDay = true;
   document.getElementById('modal-title').textContent=sh?`Edit shift — ${emp.split(' ')[0]}`:`Assign shift — ${emp.split(' ')[0]}`;
 
   const empSel=document.getElementById('m-emp');
-  empSel.innerHTML=data.employees.map(e=>`<option value="${e}" ${e===emp?'selected':''}>${e}</option>`).join('');
+  empSel.innerHTML=data.employees.map(e=>`<option value="${empName(e)}" ${empName(e)===emp?'selected':''}>${empName(e)}</option>`).join('');
 
   const daySel=document.getElementById('m-day');
   daySel.innerHTML=DAYS.map((d,i)=>`<option value="${i}" ${i===dayIdx?'selected':''}>${d}</option>`).join('');
@@ -792,6 +1235,7 @@ function openModal(dayIdx, emp, shIdx, defaultStart) {
   document.getElementById('m-note').value=sh?(sh.note||''):'';
   document.getElementById('del-btn').style.display=sh?'inline-flex':'none';
   document.getElementById('modal-overlay').classList.remove('hidden');
+  buildMoveWeekBtns();
   const preType = sh ? (sh.shiftType||'') : '';
   currentShiftType = preType;
   setTimeout(()=>selectType(preType), 10);
@@ -800,6 +1244,7 @@ function openModal(dayIdx, emp, shIdx, defaultStart) {
 
 let currentShiftType = '';
 let currentColor = '';
+let modalFullDay = false;
 
 function selectColor(color){
   currentColor = color;
@@ -817,7 +1262,117 @@ function selectType(type){
   });
 }
 function assignDayOff(){ selectType('Day Off'); }
-function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');editingIdx=null;}
+
+// ── Date Range Day Off ──
+function openDateRangeModal(){
+  const empSel = document.getElementById('dr-emp');
+  empSel.innerHTML = data.employees.map(e=>`<option value="${empName(e)}">${empName(e)}</option>`).join('');
+  // default dates to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dr-from').value = today;
+  document.getElementById('dr-to').value = today;
+  document.getElementById('dr-note').value = '';
+  document.getElementById('dr-preview').textContent = '';
+  document.getElementById('daterange-overlay').classList.remove('hidden');
+  // live preview
+  ['dr-from','dr-to','dr-emp'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', updateDrPreview);
+  });
+  updateDrPreview();
+}
+function closeDateRangeModal(){
+  document.getElementById('daterange-overlay').classList.add('hidden');
+}
+function updateDrPreview(){
+  const from = document.getElementById('dr-from').value;
+  const to   = document.getElementById('dr-to').value;
+  const el   = document.getElementById('dr-preview');
+  if(!from || !to){ el.textContent=''; return; }
+  const d1 = new Date(from + 'T00:00:00');
+  const d2 = new Date(to   + 'T00:00:00');
+  if(d2 < d1){ el.textContent='⚠ End date must be after start date.'; return; }
+  const days = Math.round((d2-d1)/(1000*60*60*24))+1;
+  el.textContent = `${days} day${days>1?'s':''} selected (${d1.toLocaleDateString('en',{month:'short',day:'numeric'})} – ${d2.toLocaleDateString('en',{month:'short',day:'numeric'})})`;
+}
+function confirmDateRange(){
+  const emp  = document.getElementById('dr-emp').value;
+  const type = document.getElementById('dr-type').value;
+  const note = document.getElementById('dr-note').value.trim();
+  const from = document.getElementById('dr-from').value;
+  const to   = document.getElementById('dr-to').value;
+  if(!from||!to){alert('Please select both dates.');return;}
+  const d1 = new Date(from+'T00:00:00');
+  const d2 = new Date(to  +'T00:00:00');
+  if(d2<d1){alert('End date must be after start date.');return;}
+
+  // Iterate each day in the range and add a Day Off shift
+  let added = 0;
+  for(let d = new Date(d1); d <= d2; d.setDate(d.getDate()+1)){
+    // Get the Monday of this day's week as a YYYY-MM-DD key
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay()+6)%7));
+    const wk = mon.getFullYear() + '-' +
+      String(mon.getMonth()+1).padStart(2,'0') + '-' +
+      String(mon.getDate()).padStart(2,'0');
+    const dayIdx = ((d.getDay()+6)%7); // 0=Mon … 6=Sun
+
+    // skip if already has a day-off on this slot
+    const exists = data.shifts.some(s=>s.emp===emp&&s.day===dayIdx&&s.week===wk&&s.dayOff);
+    if(exists) continue;
+
+    data.shifts.push({
+      emp, day:dayIdx, week:wk,
+      startH:0, endH:24,
+      note: note || type,
+      dayOff: true,
+      shiftType: type,
+      shiftColor: ''
+    });
+    added++;
+  }
+
+  closeDateRangeModal();
+  renderAll();
+  cloudSave();
+  showNotify(`${added} day${added!==1?'s':''} marked as ${type} ✓`);
+  setStatus('Day Off range saved ✓');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');editingIdx=null;startRealtime();}
+
+function buildMoveWeekBtns(){
+  const section = document.getElementById('move-week-section');
+  const container = document.getElementById('move-week-btns');
+  container.innerHTML = '';
+  if(editingIdx === null){ section.style.display='none'; return; }
+  section.style.display = 'block';
+  // Show 4 weeks back and 4 weeks forward, excluding current week
+  for(let off = -4; off <= 4; off++){
+    if(off === weekOffset) continue;
+    const dates = getWeekDates(off);
+    const label = fmtDate(dates[0]) + ' – ' + fmtDate(dates[6]);
+    const isPast = off < weekOffset;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm';
+    btn.style.cssText = isPast
+      ? 'background:#fef3c7;border-color:#fcd34d;color:#92400e;font-size:13px;'
+      : 'background:#d1fae5;border-color:#6ee7b7;color:#065f46;font-size:13px;';
+    btn.innerHTML = (isPast ? '◀ ' : '▶ ') + label;
+    btn.onclick = () => moveShiftToWeek(off);
+    container.appendChild(btn);
+  }
+}
+
+function moveShiftToWeek(targetOffset){
+  if(editingIdx === null) return;
+  const targetKey = getWeekKey(targetOffset);
+  data.shifts[editingIdx] = {...data.shifts[editingIdx], week: targetKey};
+  closeModal();
+  renderAll();
+  cloudSave();
+  const dates = getWeekDates(targetOffset);
+  showNotify('Turno movido a ' + fmtDate(dates[0]) + ' – ' + fmtDate(dates[6]) + ' ✓');
+  setStatus('Turno movido ✓');
+}
 
 function confirmShift(){
   const emp=document.getElementById('m-emp').value;
@@ -834,15 +1389,20 @@ function confirmShift(){
   }
   // check for overlap only when adding new
   if(editingIdx===null){
-    const overlap=data.shifts.some(s=>s.emp===emp&&s.day===day&&s.week===weekOffset&&s.startH<endH&&s.endH>startH);
+    const overlap=data.shifts.some(s=>s.emp===emp&&s.day===day&&s.week===getWeekKey(weekOffset)&&s.startH<endH&&s.endH>startH);
     if(overlap){alert('This time overlaps with an existing shift. Please choose a different time.');return;}
   }
   const isSpecial = currentShiftType !== '';
-  data.shifts.push({emp,day,week:weekOffset,startH,endH,
+  // if Full Day, remove any existing shifts in the same cell first
+  if(modalFullDay){
+    data.shifts = data.shifts.filter(s=>!(s.emp===emp&&s.day===day&&s.week===getWeekKey(weekOffset)));
+  }
+  data.shifts.push({emp,day,week:getWeekKey(weekOffset),startH,endH,
     note: isSpecial ? currentShiftType : note,
     dayOff: isSpecial,
     shiftType: currentShiftType,
-    shiftColor: currentColor
+    shiftColor: currentColor,
+    fullDay: modalFullDay
   });
   closeModal();
   renderAll();
@@ -854,7 +1414,7 @@ function removeShift(e,idx){
   e.stopPropagation();
   data.shifts.splice(idx,1);
   renderAll();
-  cloudSave();
+  pushToCloud();
   setStatus('Shift deleted ✓');
 }
 function deleteCurrentShift(){
@@ -862,6 +1422,7 @@ function deleteCurrentShift(){
   data.shifts.splice(editingIdx,1);
   closeModal();
   renderAll();
+  pushToCloud();
   setStatus('Shift deleted.');
 }
 
@@ -870,16 +1431,22 @@ function manageEmployees(){renderEmpList();document.getElementById('emp-overlay'
 function closeEmpModal(){document.getElementById('emp-overlay').classList.add('hidden');renderAll();cloudSave();}
 function renderEmpList(){
   document.getElementById('emp-list').innerHTML=data.employees.length
-    ?data.employees.map((e,i)=>{
+    ?data.employees.map((empObj,i)=>{
+      const e=empName(empObj); const cat=empCat(empObj);
       const pal=EMP_PALETTES[i%EMP_PALETTES.length];
-      const safe=e.replace(/'/g,"\\'");
-      return `<div class="emp-row" id="emprow-${i}">
+      const safe=e.replace(/'/g,"\'");
+      return `<div class="emp-row" id="emprow-${i}" style="align-items:center;">
         <div class="avatar" style="width:28px;height:28px;font-size:15px;background:${pal.bg};color:${pal.text};border:1px solid ${pal.border};flex-shrink:0">${initials(e)}</div>
         <span id="empname-${i}" style="flex:1;font-size:16px;padding:4px;">${e}</span>
         <input type="text" id="empinput-${i}" value="${e.replace(/"/g,'&quot;')}"
           style="flex:1;font-size:16px;border:1px solid var(--accent);border-radius:6px;padding:4px 8px;background:var(--bg);color:var(--text);outline:none;display:none;"
           onkeydown="if(event.key==='Enter')saveEmpName(${i},'${safe}');if(event.key==='Escape')cancelEmpEdit(${i})"
         />
+        <select id="catsel-${i}" onchange="changeEmpCat(${i},'${safe}')"
+          style="font-size:13px;border:1px solid var(--border2);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text);outline:none;">
+          <option value="floor" ${cat==='floor'?'selected':''}>🏢 Floor</option>
+          <option value="kitchen" ${cat==='kitchen'?'selected':''}>🍳 Kitchen</option>
+        </select>
         <button class="btn btn-sm" id="editbtn-${i}"
           style="background:var(--accent-light);color:var(--accent);border-color:var(--accent);padding:4px 8px;"
           onclick="startEmpEdit(${i})" title="Edit">✏️</button>
@@ -913,9 +1480,10 @@ function saveEmpName(i, oldName){
 
 function addEmployee(){
   const name=document.getElementById('new-emp').value.trim();
-  if(!name||data.employees.includes(name))return;
+  const cat=document.getElementById('new-emp-cat').value||'floor';
+  if(!name||data.employees.some(e=>empName(e)===name))return;
   if(data.employees.length>=20){showNotify('Maximum 20 employees.');return;}
-  data.employees.push(name);
+  data.employees.push({name, cat});
   document.getElementById('new-emp').value='';
   renderEmpList();
   cloudSave();
@@ -924,20 +1492,29 @@ function addEmployee(){
 function renameEmployee(oldName, newName){
   newName = newName.trim();
   if(!newName || newName === oldName) return;
-  if(data.employees.includes(newName)){
+  if(data.employees.some(e=>empName(e)===newName)){
     showNotify('That name already exists.');
     renderEmpList();
     return;
   }
-  data.employees = data.employees.map(e => e===oldName ? newName : e);
+  data.employees = data.employees.map(e => empName(e)===oldName ? {...(typeof e==='object'?e:{name:e,cat:'floor'}), name:newName} : e);
   data.shifts = data.shifts.map(s => s.emp===oldName ? {...s, emp:newName} : s);
   renderEmpList();
   cloudSave();
   setStatus('Name updated ✓');
 }
+function changeEmpCat(i, oldName){
+  const cat = document.getElementById('catsel-'+i).value;
+  const idx = data.employees.findIndex(e=>empName(e)===oldName);
+  if(idx<0)return;
+  const e = data.employees[idx];
+  data.employees[idx] = {...(typeof e==='object'?e:{name:oldName,cat:'floor'}), cat};
+  cloudSave();
+  renderAll();
+}
 function removeEmployee(name){
   if(!confirm(`¿Eliminar a ${name} y todos sus turnos?`))return;
-  data.employees=data.employees.filter(e=>e!==name);
+  data.employees=data.employees.filter(e=>empName(e)!==name);
   data.shifts=data.shifts.filter(s=>s.emp!==name);
   renderEmpList();
   cloudSave();
@@ -948,11 +1525,6 @@ function nextWeek(){weekOffset++;renderAll();}
 
 // Storage / share
 function getKey(){if(!shareKey)shareKey='ts_'+Math.random().toString(36).slice(2,10);return shareKey;}
-const JSONBIN_KEY = '$2a$10$/9Me3OWYsNZa0XbWKU3Hg.1m6ZplMMNg06134to5OWVF7QDTyQJGq';
-const JSONBIN_BIN_KEY = 'purpletie_bin_id';
-const FIREBASE_URL = 'https://purple-tie-default-rtdb.firebaseio.com';
-const FIREBASE_PATH = '/schedule.json';
-const APP_URL = 'https://vermillion-cobbler-790e9b.netlify.app';
 let firebaseListener = null;
 
 
@@ -966,36 +1538,30 @@ async function saveAll(){
   data.shifts=[...data.shifts];
   setStatus('Saving...');
   try{
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-    let binId = localStorage.getItem(SYNC_KEY);
-    let response;
-    if(binId){
-      response = await fetch(`${JSONBIN_API}/${binId}`, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_MASTER_KEY},
-        body:JSON.stringify(data)
-      });
-    } else {
-      response = await fetch(JSONBIN_API, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_MASTER_KEY,'X-Bin-Name':'PurpleTie','X-Bin-Private':'false'},
-        body:JSON.stringify(data)
-      });
-      if(response.ok){
-        const result = await response.json();
-        binId = result.metadata.id;
-        localStorage.setItem(SYNC_KEY, binId);
-      }
+    localStorage.setItem(getLocalKey(), JSON.stringify(data));
+    let binId = localStorage.getItem(getSyncKey());
+    // If no binId, create a new unique one
+    if(!binId){
+      binId = 'pt_' + Math.random().toString(36).slice(2,12);
+      localStorage.setItem(getSyncKey(), binId);
     }
+    const response = await fetch(`${FIREBASE_DB}/schedules/${binId}.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
     if(!response.ok) throw new Error('Save error');
     setStatus('Saved ✓');
     document.getElementById('last-sync').textContent='Saved: '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
     showNotify('Schedule saved to cloud ✓');
-    // Update URL with sync ID so it can be shared directly
-    const newBinId = localStorage.getItem(SYNC_KEY);
-    if(newBinId && window.history.replaceState){
-      const url = new URL(window.location.href);
-      url.searchParams.set('sync', newBinId);
+    // Update URL with both sync IDs so it can be shared directly
+    // Always read BOTH keys from localStorage (one may have been saved in a previous session)
+    const syncS = localStorage.getItem(SECTIONS.supervisors.syncKey);
+    const syncM = localStorage.getItem(SECTIONS.managers.syncKey);
+    if(window.history.replaceState){
+      const url = new URL(window.location.href.split('?')[0]); // start clean
+      if(syncS) url.searchParams.set('syncS', syncS);
+      if(syncM) url.searchParams.set('syncM', syncM);
       window.history.replaceState({}, '', url.toString());
     }
     // resume auto-sync after 3 seconds to let the cloud settle
@@ -1008,17 +1574,17 @@ async function saveAll(){
 }
 async function doRefresh(){
   try{
-    const binId = localStorage.getItem(SYNC_KEY);
+    const binId = localStorage.getItem(getSyncKey());
     if(!binId){setStatus('No cloud save found. Press Save first.',false);showNotify('Press Save first to sync.');return;}
-    const response = await fetch(`${JSONBIN_API}/${binId}/latest`, {
-      headers:{'X-Master-Key':JSONBIN_MASTER_KEY}
-    });
+    const response = await fetch(`${FIREBASE_DB}/schedules/${binId}.json`);
     if(!response.ok) throw new Error('Fetch failed');
     const result = await response.json();
-    if(!result||!result.record) return;
+    if(!result) return;
     const prev=JSON.stringify(data.shifts);
-    data=result.record;
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+    data=result;
+    data.employees = migrateEmployees(data.employees || []);
+    data.shifts = migrateWeekKeys(data.shifts || []);
+    localStorage.setItem(getLocalKey(), JSON.stringify(data));
     document.getElementById('sched-name').value=data.name;
     renderAll();
     if(JSON.stringify(data.shifts)!==prev)showNotify('Schedule updated ✓');
@@ -1028,14 +1594,17 @@ async function doRefresh(){
 }
 
 function getShareableLink(){
-  const binId = localStorage.getItem(SYNC_KEY);
-  if(!binId) return null;
-  // Use current page URL as base (works on any domain/netlify)
+  const syncS = localStorage.getItem(SECTIONS.supervisors.syncKey);
+  const syncM = localStorage.getItem(SECTIONS.managers.syncKey);
+  if(!syncS && !syncM) return null;
   const base = window.location.href.split('?')[0].split('#')[0];
-  return base + '?sync=' + binId;
+  let params = [];
+  if(syncS) params.push('syncS=' + syncS);
+  if(syncM) params.push('syncM=' + syncM);
+  return base + '?' + params.join('&');
 }
 function openShareModal(){
-  const binId = localStorage.getItem(SYNC_KEY);
+  const binId = localStorage.getItem(getSyncKey());
   const noSave = document.getElementById('share-nosave-notice');
   const linkSection = document.getElementById('share-link-section');
   const sendBtn = document.getElementById('share-send-btn');
@@ -1076,7 +1645,7 @@ function sendShareEmail(){
     link + '\n\n' +
     'The schedule loads automatically — all changes sync in real time.\n\n' +
     'Schedule name: ' + (data.name || 'Purple Tie Schedule') + '\n' +
-    'Employees: ' + data.employees.join(', ') + '\n\n' +
+    'Employees: ' + data.employees.map(empName).join(', ') + '\n\n' +
     '— Sent from Purple Tie Schedule Manager'
   );
   window.location.href = `mailto:${allTo}?subject=${subject}&body=${body}`;
@@ -1084,10 +1653,24 @@ function sendShareEmail(){
   showNotify('Email app opened ✓');
 }
 
+function isModalOpen(){
+  const modals = ['modal-overlay','emp-overlay','share-overlay','syncid-overlay','daterange-overlay'];
+  return modals.some(id => !document.getElementById(id).classList.contains('hidden'));
+}
 function startRealtime(){
   if(firebaseListener) clearInterval(firebaseListener);
-  firebaseListener = setInterval(doRefresh, 60000);
-  document.getElementById('last-sync').textContent='Live sync ON';
+  firebaseListener = setInterval(()=>{
+    if(isModalOpen()){
+      document.getElementById('last-sync').textContent='Sync paused (editing...)';
+      return;
+    }
+    doRefresh();
+  }, 30000);
+  document.getElementById('last-sync').textContent='Auto-sync every 30s';
+}
+function stopRealtime(){
+  if(firebaseListener){ clearInterval(firebaseListener); firebaseListener=null; }
+  document.getElementById('last-sync').textContent='';
 }
 function startPoll(){}
 function copyCode(){
@@ -1096,7 +1679,7 @@ function copyCode(){
 }
 function loadCode(){
   // always open modal so user can see/change their Sync ID
-  const existing = localStorage.getItem(SYNC_KEY) || '';
+  const existing = localStorage.getItem(getSyncKey()) || '';
   document.getElementById('syncid-input').value = existing;
   document.getElementById('syncid-overlay').classList.remove('hidden');
   setTimeout(()=>{ 
@@ -1110,7 +1693,7 @@ function closeSyncModal(){
 function confirmSyncId(){
   const id = document.getElementById('syncid-input').value.trim();
   if(!id){alert('Please paste a valid Sync ID.');return;}
-  localStorage.setItem(SYNC_KEY, id);
+  localStorage.setItem(getSyncKey(), id);
   closeSyncModal();
   doRefresh().then(()=>startRealtime());
   showNotify('Connecting...');
@@ -1134,27 +1717,32 @@ function doPrint(){
   if(!data.employees.length){
     bodyRows='<tr><td colspan="8" style="padding:32px;text-align:center;color:#7c6fa0;font-size:13px;">No employees.</td></tr>';
   } else {
-    data.employees.forEach((emp,ei)=>{
+    data.employees.forEach((empObj,ei)=>{
+      const emp=empName(empObj);
       const pal=EMP_PALETTES[ei%EMP_PALETTES.length];
-      const hrs=data.shifts.filter(s=>s.emp===emp&&s.week===weekOffset).reduce((a,s)=>a+(s.dayOff?0:s.endH-s.startH),0);
+      const hrs=data.shifts.filter(s=>s.emp===emp&&s.week===getWeekKey(weekOffset)).reduce((a,s)=>a+(s.dayOff?0:s.endH-s.startH),0);
       const ini=emp.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       let cells=`<td style="padding:10px 14px;background:${pal.bg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;border-right:2px solid ${pal.border};">
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="width:34px;height:34px;border-radius:50%;background:${pal.bg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:${pal.text};border:2px solid ${pal.border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'Calibri','Carlito',sans-serif;flex-shrink:0">${ini}</div>
           <div>
             <div style="font-size:13px;font-weight:500;color:${pal.text};font-family:Jost,sans-serif;">${emp.split(' ')[0]}</div>
-            <div style="font-size:10px;color:${pal.text};opacity:0.7;font-family:'Calibri','Carlito',sans-serif;">${hrs}h/week</div>
+            <div style="font-size:10px;color:${pal.text};opacity:0.7;font-family:'Calibri','Carlito',sans-serif;">${hrs}h</div>
           </div>
         </div>
       </td>`;
       dates.forEach((d,di)=>{
         const isToday=di===ti&&weekOffset===0;
         const rowBg=isToday?'#f5f0ff':'#ffffff';
-        const dayShifts=data.shifts.filter(s=>s.emp===emp&&s.day===di&&s.week===weekOffset).sort((a,b)=>a.startH-b.startH);
+        const dayShifts=data.shifts.filter(s=>s.emp===emp&&s.day===di&&s.week===getWeekKey(weekOffset)).sort((a,b)=>a.startH-b.startH);
+
+        // Detect full-width shifts: dayOff range (startH=0,endH=24) or fullDay flag
+        const fullWidthShifts = dayShifts.filter(s=>(s.startH===0&&s.endH===24&&s.dayOff)||s.fullDay===true);
+        const normalShifts = dayShifts.filter(s=>!((s.startH===0&&s.endH===24&&s.dayOff)||s.fullDay===true));
 
         // AM shifts (startH < 12) and PM shifts (startH >= 12)
-        const amShifts=dayShifts.filter(s=>s.dayOff||s.startH<12);
-        const pmShifts=dayShifts.filter(s=>!s.dayOff&&s.startH>=12);
+        const amShifts=normalShifts.filter(s=>s.startH<12);
+        const pmShifts=normalShifts.filter(s=>s.startH>=12);
 
         function shiftBlock(s){
           if(s.dayOff) return `<div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:6px;padding:6px 4px;background:#fee2e2 !important;border:1px solid #fca5a5;color:#dc2626;font-size:9px;font-weight:700;text-align:center;font-family:Jost,sans-serif;width:100%;">${s.note||'Day Off'}</div>`;
@@ -1166,39 +1754,43 @@ function doPrint(){
 
         const amContent=amShifts.map(s=>shiftBlock(s)).join('');
         const pmContent=pmShifts.map(s=>shiftBlock(s)).join('');
+        const fullWidthContent=fullWidthShifts.map(s=>shiftBlock(s)).join('');
 
-        const cellContent=`<div style="display:grid;grid-template-columns:1fr 1fr;height:100%;gap:0;">
-          <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:3px;border-right:1px dashed #e0d9f7;vertical-align:top;">
-            <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">AM</div>
-            ${amContent}
-          </div>
-          <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:3px;vertical-align:top;">
-            <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">PM</div>
-            ${pmContent}
-          </div>
-        </div>`;
+        let cellContent;
+        if(fullWidthShifts.length>0){
+          // Full width block spanning both columns
+          cellContent=`<div style="padding:3px;height:100%;">
+            ${fullWidthContent}
+          </div>`;
+        } else {
+          cellContent=`<div style="display:grid;grid-template-columns:1fr 1fr;height:100%;gap:0;">
+            <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:3px;border-right:1px dashed #e0d9f7;vertical-align:top;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">AM</div>
+              ${amContent}
+            </div>
+            <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:3px;vertical-align:top;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">PM</div>
+              ${pmContent}
+            </div>
+          </div>`;
+        }
 
         cells+=`<td style="-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0;border-right:1px solid #e0d9f7;border-bottom:1px solid #e0d9f7;min-height:60px;vertical-align:top;background:${rowBg} !important;">${cellContent}</td>`;
       });
-      bodyRows+=`<tr>${cells}</tr>`;
+      bodyRows+=`<tr style="break-inside:avoid;page-break-inside:avoid;">${cells}</tr>`;
     });
   }
 
-  const ws=data.shifts.filter(s=>s.week===weekOffset);
+  const ws=data.shifts.filter(s=>s.week===getWeekKey(weekOffset));
   const working=ws.filter(s=>s.day===ti).length;
   const totalHrs=ws.reduce((a,s)=>a+(s.endH-s.startH),0);
   const pct=data.employees.length*7>0?Math.round(ws.length/(data.employees.length*7)*100):0;
 
-  const metricsHtml=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;">
-    ${[['On shift today',working],['Employees',data.employees.length],['Weekly shifts',ws.length],['Total hours',totalHrs],['Coverage',pct+'%']].map(([label,val])=>`
-    <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#ede9fe !important;border-radius:10px;padding:12px 14px;border:1px solid #c4b5f4;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:#7c6fa0;margin-bottom:4px;font-family:Jost,sans-serif;">${label}</div>
-      <div style="font-size:22px;font-weight:300;font-family:'Calibri','Carlito',sans-serif;color:#6d28d9;">${val}</div>
-    </div>`).join('')}
-  </div>`;
+  const metricsHtml=``;
 
   const legendHtml='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">'+
-    data.employees.map((emp,i)=>{
+    data.employees.map((empObj,i)=>{
+      const emp=empName(empObj);
       const pal=EMP_PALETTES[i%EMP_PALETTES.length];
       return `<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#7c6fa0;font-family:Jost,sans-serif;">
         <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;width:12px;height:12px;border-radius:50%;background:${pal.dot} !important;"></div>${emp}
@@ -1218,6 +1810,8 @@ function doPrint(){
         * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
         body { padding:8px; }
         @page { margin:0.8cm; size:landscape; }
+        tr { break-inside:avoid; page-break-inside:avoid; }
+        table { border-collapse:collapse; width:100%; }
       }
     </style>
   </head><body>
@@ -1254,20 +1848,300 @@ function doPrint(){
 // close on backdrop
 document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
 document.getElementById('emp-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('emp-overlay'))closeEmpModal();});
+document.getElementById('daterange-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('daterange-overlay'))closeDateRangeModal();});
 document.getElementById('new-emp').addEventListener('keydown',e=>{if(e.key==='Enter')addEmployee();});
 
-// Auto-load sync ID from URL ?sync=BINID
+// Auto-load both sync IDs from URL ?syncS=SUPERVISORS_ID&syncM=MANAGERS_ID
 (function(){
   const params = new URLSearchParams(window.location.search);
+  // Load both sync IDs if present
+  const syncS = params.get('syncS');
+  const syncM = params.get('syncM');
+  if(syncS && syncS.trim()) localStorage.setItem(SECTIONS.supervisors.syncKey, syncS.trim());
+  if(syncM && syncM.trim()) localStorage.setItem(SECTIONS.managers.syncKey, syncM.trim());
+  // Legacy single sync support
   const syncFromUrl = params.get('sync');
-  if(syncFromUrl && syncFromUrl.trim()){
-    localStorage.setItem(SYNC_KEY, syncFromUrl.trim());
-  }
+  if(syncFromUrl && syncFromUrl.trim()) localStorage.setItem(getSyncKey(), syncFromUrl.trim());
 })();
+
+async function doExportPDF(){
+  const btn = document.getElementById('pdf-btn');
+  const label = document.getElementById('pdf-btn-label');
+  btn.disabled = true;
+  label.textContent = 'Generating…';
+
+  try {
+    // Build the same print HTML as doPrint() but return it as a string
+    const dates = getWeekDates(weekOffset);
+    const ti = todayIdx();
+
+    let cols = '<col style="width:150px"/>' + DAYS.map(()=>'<col style="min-width:110px"/>').join('');
+    let headerCols = '<th style="text-align:left;padding:10px 14px;background:#5b21b6;color:#fff;font-family:Jost,sans-serif;font-size:12px;letter-spacing:0.06em;">Employee</th>';
+    dates.forEach((d,di)=>{
+      const isToday = di===ti && weekOffset===0;
+      const bg = isToday ? '#8b5cf6' : '#6d28d9';
+      headerCols += `<th style="padding:10px 8px;background:${bg};color:#fff;font-family:Jost,sans-serif;font-size:12px;letter-spacing:0.06em;text-align:center;border-right:1px solid rgba(255,255,255,0.3);">
+        <div>${DAYS[di]}</div><div style="font-size:10px;opacity:0.85;margin-top:2px;font-family:'Calibri','Carlito',sans-serif;">${fmtDate(d)}</div>
+      </th>`;
+    });
+
+    let bodyRows = '';
+    if(!data.employees.length){
+      bodyRows = '<tr><td colspan="8" style="padding:32px;text-align:center;color:#7c6fa0;font-size:13px;">No employees.</td></tr>';
+    } else {
+      data.employees.forEach((empObj,ei)=>{
+        const emp=empName(empObj);
+        const pal = EMP_PALETTES[ei%EMP_PALETTES.length];
+        const hrs = data.shifts.filter(s=>s.emp===emp&&s.week===getWeekKey(weekOffset)).reduce((a,s)=>a+(s.dayOff?0:s.endH-s.startH),0);
+        const ini = emp.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        let cells = `<td style="padding:10px 14px;background:${pal.bg};border-right:2px solid ${pal.border};">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:${pal.bg};color:${pal.text};border:2px solid ${pal.border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'Calibri','Carlito',sans-serif;flex-shrink:0">${ini}</div>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:${pal.text};font-family:Jost,sans-serif;">${emp.split(' ')[0]}</div>
+              <div style="font-size:10px;color:${pal.text};opacity:0.7;font-family:'Calibri','Carlito',sans-serif;">${hrs}h</div>
+            </div>
+          </div>
+        </td>`;
+        dates.forEach((d,di)=>{
+          const isToday = di===ti && weekOffset===0;
+          const rowBg = isToday ? '#f5f0ff' : '#ffffff';
+          const dayShifts = data.shifts.filter(s=>s.emp===emp&&s.day===di&&s.week===getWeekKey(weekOffset)).sort((a,b)=>a.startH-b.startH);
+          const fullWidthShifts = dayShifts.filter(s=>(s.startH===0&&s.endH===24&&s.dayOff)||s.fullDay===true);
+          const normalShifts = dayShifts.filter(s=>!((s.startH===0&&s.endH===24&&s.dayOff)||s.fullDay===true));
+          const amShifts = normalShifts.filter(s=>s.startH<12);
+          const pmShifts = normalShifts.filter(s=>s.startH>=12);
+
+          function shiftBlock(s){
+            if(s.dayOff) return `<div style="border-radius:6px;padding:6px 4px;background:#fee2e2;border:1px solid #fca5a5;color:#dc2626;font-size:9px;font-weight:700;text-align:center;font-family:Jost,sans-serif;width:100%;">${s.note||'Day Off'}</div>`;
+            return `<div style="border-radius:6px;padding:4px 6px;background:${pal.bg};border:1px solid ${pal.border};color:${pal.text};margin-bottom:2px;">
+              <div style="font-size:14px;font-weight:600;font-family:'Calibri','Carlito',sans-serif;">${fmtH(s.startH)}–${fmtH(s.endH)}</div>
+              ${s.note?`<div style="font-size:8px;margin-top:1px;opacity:0.8;font-family:Jost,sans-serif;">${s.note}</div>`:''}
+            </div>`;
+          }
+
+          let cellContent;
+          if(fullWidthShifts.length>0){
+            cellContent = `<div style="padding:3px;height:100%;">${fullWidthShifts.map(s=>shiftBlock(s)).join('')}</div>`;
+          } else {
+            cellContent = `<div style="display:grid;grid-template-columns:1fr 1fr;height:100%;gap:0;">
+              <div style="padding:3px;border-right:1px dashed #e0d9f7;vertical-align:top;">
+                <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">AM</div>
+                ${amShifts.map(s=>shiftBlock(s)).join('')}
+              </div>
+              <div style="padding:3px;vertical-align:top;">
+                <div style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:#7c6fa0;text-align:center;margin-bottom:2px;">PM</div>
+                ${pmShifts.map(s=>shiftBlock(s)).join('')}
+              </div>
+            </div>`;
+          }
+          cells += `<td style="padding:0;border-right:1px solid #e0d9f7;border-bottom:1px solid #e0d9f7;min-height:60px;vertical-align:top;background:${rowBg};">${cellContent}</td>`;
+        });
+        bodyRows += `<tr>${cells}</tr>`;
+      });
+    }
+
+    const legendHtml = '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">' +
+      data.employees.map((empObj,i)=>{
+        const emp=empName(empObj);
+        const pal = EMP_PALETTES[i%EMP_PALETTES.length];
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#7c6fa0;font-family:Jost,sans-serif;">
+          <div style="width:12px;height:12px;border-radius:50%;background:${pal.dot};"></div>${emp}
+        </div>`;
+      }).join('') + '</div>';
+
+    const htmlContent = `<!DOCTYPE html><html><head>
+      <meta charset="UTF-8"/>
+      <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Jost',sans-serif;background:#fff;color:#1e1340;padding:24px;width:1100px;}
+        table{border-collapse:collapse;width:100%;}
+        td,th{border:1px solid #e0d9f7;}
+      </style>
+    </head><body>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #6d28d9;">
+        <div>
+          <div style="font-style:italic;font-size:28px;font-weight:500;color:#6d28d9;font-family:Georgia,serif;">Purple <span style="color:#7c6fa0">Tie</span></div>
+          <div style="font-size:10px;color:#7c6fa0;margin-top:2px;letter-spacing:0.08em;text-transform:uppercase;font-family:Jost,sans-serif;">Supervisors' Schedule</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:500;color:#1e1340;font-family:Jost,sans-serif;">${data.name||'Schedule'}</div>
+          <div style="font-size:11px;color:#7c6fa0;margin-top:3px;font-family:'Calibri','Carlito',sans-serif;">${fmtDate(dates[0])} – ${fmtDate(dates[6])}</div>
+        </div>
+      </div>
+      ${legendHtml}
+      <div style="border-radius:12px;border:1px solid #e0d9f7;overflow:hidden;">
+        <table>
+          <colgroup>${cols}</colgroup>
+          <thead><tr>${headerCols}</tr></thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;font-size:10px;color:#7c6fa0;text-align:right;font-family:Jost,sans-serif;">
+        Printed on ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+      </div>
+    </body></html>`;
+
+    // Render in hidden iframe — tall enough to fit everything without scrolling
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1150px;height:6000px;border:none;visibility:hidden;';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(htmlContent);
+    iframe.contentDocument.close();
+
+    // Wait for fonts/layout to settle
+    await new Promise(r => setTimeout(r, 1400));
+
+    const { jsPDF } = window.jspdf;
+    // Use pt units — A4 landscape = 841.89 x 595.28 pt
+    const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4', compress:true });
+    const pdfW = pdf.internal.pageSize.getWidth();   // ~841.89 pt
+    const pdfH = pdf.internal.pageSize.getHeight();  // ~595.28 pt
+
+    // Capture full page as one high-res canvas
+    const fullCanvas = await html2canvas(iframe.contentDocument.body, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      width: 1150,
+      windowWidth: 1150,
+      scrollY: 0
+    });
+    document.body.removeChild(iframe);
+
+    const scale = 2; // matches html2canvas scale above
+    const canvasW = fullCanvas.width;   // px at 2x (= 1150 * 2 = 2300)
+    const canvasH = fullCanvas.height;
+
+    // Measure each table row's position in the full canvas
+    // We do this by re-parsing bodyRows to count rows and computing heights
+    // Strategy: scan the canvas top-to-bottom and find row boundaries by
+    // measuring the header block height + each row height from the iframe DOM.
+
+    // Re-open an iframe just for measurements (no visual)
+    const mframe = document.createElement('iframe');
+    mframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1150px;height:6000px;border:none;visibility:hidden;';
+    document.body.appendChild(mframe);
+    mframe.contentDocument.open();
+    mframe.contentDocument.write(htmlContent);
+    mframe.contentDocument.close();
+    await new Promise(r => setTimeout(r, 600));
+
+    // Collect row top/bottom positions in pixel (device) coords
+    const tableRows = mframe.contentDocument.querySelectorAll('table tbody tr');
+    const tableHeader = mframe.contentDocument.querySelector('table thead');
+    const headerSection = mframe.contentDocument.querySelector('body > div:first-child'); // title bar
+    const legendDiv = mframe.contentDocument.querySelector('body > div:nth-child(2)');    // legend
+
+    // Get bounding rects relative to document top
+    function docTop(el){ 
+      let t = 0; 
+      while(el){ t += el.offsetTop; el = el.offsetParent; } 
+      return t; 
+    }
+
+    // Build list of segments: {top, bottom} in canvas pixels (2x scale)
+    // Each segment = one table row (they must not be cut)
+    const segments = [];
+
+    // Segment 0: everything above the first tbody row (header+legend+thead)
+    const firstRowTop = tableRows.length > 0 ? docTop(tableRows[0]) * scale : fullCanvas.height;
+    segments.push({ top: 0, bottom: firstRowTop });
+
+    // One segment per tbody row
+    tableRows.forEach((tr, i) => {
+      const top = docTop(tr) * scale;
+      const bottom = top + tr.offsetHeight * scale;
+      segments.push({ top, bottom });
+    });
+
+    // Extend the last row segment to include the footer below it
+    if(tableRows.length > 0 && segments.length > 1){
+      segments[segments.length - 1].bottom = fullCanvas.height;
+    }
+
+    document.body.removeChild(mframe);
+
+    // Margin in PDF points (pt)
+    const MARGIN = 18; // pt
+    const contentW_pt = pdfW - MARGIN * 2;
+    const contentH_pt = pdfH - MARGIN * 2;
+
+    // Scale: how many canvas-px fit per PDF pt
+    // canvas is rendered at 2x of 1150px wide -> canvasW = 2300px maps to contentW_pt
+    const pxPerPt = canvasW / contentW_pt;        // canvas-px per PDF pt
+    const pageHLimit = contentH_pt * pxPerPt;     // max canvas-px tall per page
+
+    // Group segments into pages — never split a row across pages
+    const pages = [];
+    let currentGroup = [];
+    let currentH = 0;
+
+    for(const seg of segments){
+      const segH = seg.bottom - seg.top;
+      if(currentGroup.length > 0 && currentH + segH > pageHLimit){
+        pages.push(currentGroup);
+        currentGroup = [seg];
+        currentH = segH;
+      } else {
+        currentGroup.push(seg);
+        currentH += segH;
+      }
+    }
+    if(currentGroup.length > 0) pages.push(currentGroup);
+
+    // Render each page
+    for(let pi = 0; pi < pages.length; pi++){
+      const group = pages[pi];
+      const groupTop = group[0].top;
+      const groupBottom = group[group.length - 1].bottom;
+      const groupH = groupBottom - groupTop;
+
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvasW;
+      pageCanvas.height = groupH;
+      const ctx = pageCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvasW, groupH);
+      ctx.drawImage(fullCanvas, 0, groupTop, canvasW, groupH, 0, 0, canvasW, groupH);
+
+      const imgData = pageCanvas.toDataURL('image/jpeg', 0.93);
+      if(pi > 0) pdf.addPage();
+      // Convert canvas-px group height back to PDF pt
+      const renderedH_pt = groupH / pxPerPt;
+      pdf.addImage(imgData, 'JPEG', MARGIN, MARGIN, contentW_pt, renderedH_pt);
+    }
+
+    const safeName = (data.name||'schedule').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    const weekStr = fmtDate(dates[0]).replace(/\//g,'-');
+    pdf.save(`purple_tie_${safeName}_${weekStr}.pdf`);
+    showNotify('PDF downloaded ✓');
+  } catch(err){
+    console.error(err);
+    alert('Error generating PDF. Try using Print → Save as PDF instead.');
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Export PDF';
+  }
+}
+
+function updateHeaderHeight(){
+  const headerEl = document.querySelector('header');
+  if(headerEl){
+    const h = headerEl.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+}
+updateHeaderHeight();
+window.addEventListener('resize', updateHeaderHeight);
+setTimeout(updateHeaderHeight, 300);
+setTimeout(updateHeaderHeight, 1000);
 
 renderAll();
 // On load: sync once from cloud if we have a key, then keep auto-polling
-if(localStorage.getItem(SYNC_KEY)){
+if(localStorage.getItem(getSyncKey())){
   doRefresh().then(()=>startRealtime());
 }
 </script>
